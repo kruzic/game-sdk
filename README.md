@@ -1,67 +1,69 @@
 # @kruzic/game-sdk
 
-SDK for building games on the [Kruzic](https://kruzic.rs) platform.
+[![npm version](https://img.shields.io/npm/v/@kruzic/game-sdk.svg)](https://www.npmjs.com/package/@kruzic/game-sdk)
 
-## Installation
+SDK za pravljenje igara na [Kružić](https://kruzic.rs) platformi.
+
+## Instalacija
 
 ```bash
 npm install @kruzic/game-sdk
 ```
 
-## Quick Start
+## Brzi početak
 
 ```typescript
 import { KruzicClient } from "@kruzic/game-sdk/client";
 
 const sdk = new KruzicClient();
 
-// Signal that your game is ready
+// Obavesti platformu da je igra spremna
 sdk.ready();
 
-// Check if user is signed in
-const isSignedIn = await sdk.isSignedIn();
+// Proveri da li je korisnik prijavljen
+const prijavljen = await sdk.isSignedIn();
 
-// Get user details
-const user = await sdk.getUserDetails();
-console.log(user?.name);
+// Dobij podatke o korisniku
+const korisnik = await sdk.getUserDetails();
+console.log(korisnik?.name);
 
-// Save user data
+// Sačuvaj podatke
 await sdk.setData("highscore", 1000);
 
-// Load user data
+// Učitaj podatke
 const highscore = await sdk.getData("highscore");
 ```
 
 ## Client API
 
-The client SDK is used in games running inside the Kruzic iframe.
+Klijentski SDK se koristi u igrama koje se pokreću unutar Kružić iframe-a.
 
 ### `new KruzicClient(options?)`
 
-Create a new SDK client.
+Kreiraj novi SDK klijent.
 
 ```typescript
 const sdk = new KruzicClient({
-  devMode: true,  // Use localStorage for local development
-  gameId: "my-game"  // Used for localStorage keys in dev mode
+  devMode: true,  // Koristi localStorage za lokalni razvoj
+  gameId: "moja-igra"  // Koristi se za localStorage ključeve u dev modu
 });
 ```
 
 ### `sdk.ready()`
 
-Signal that your game has loaded and is ready to play. Call this once your game initializes.
+Obaveštava platformu da je igra učitana i spremna. Pozovi ovu funkciju kada se igra inicijalizuje.
 
 ### `sdk.isSignedIn(): Promise<boolean>`
 
-Check if the current user is signed in.
+Proverava da li je korisnik prijavljen.
 
 ### `sdk.getUserId(): Promise<string | null>`
 
-Get the current user's ID. Returns `null` for guests.
+Vraća ID korisnika. Vraća `null` za goste.
 
 ### `sdk.getUserDetails(): Promise<UserDetails | null>`
 
-Get user details including name and profile picture.
+Vraća detalje o korisniku uključujući ime i sliku profila.
 
 ```typescript
 interface UserDetails {
@@ -73,33 +75,33 @@ interface UserDetails {
 
 ### `sdk.getData<T>(key: string): Promise<T | null>`
 
-Load a stored value for the current user.
+Učitava sačuvanu vrednost za trenutnog korisnika.
 
 ### `sdk.setData<T>(key: string, value: T): Promise<void>`
 
-Save a value for the current user. The value can be any JSON-serializable type.
+Čuva vrednost za trenutnog korisnika. Vrednost može biti bilo koji JSON-serializabilan tip.
 
 ### `sdk.deleteData(key: string): Promise<void>`
 
-Delete a stored value.
+Briše sačuvanu vrednost.
 
 ### `sdk.listData(): Promise<string[]>`
 
-List all stored keys for the current user.
+Vraća listu svih sačuvanih ključeva za trenutnog korisnika.
 
 ### `sdk.destroy()`
 
-Clean up event listeners. Call this when unmounting your game.
+Čisti event listenere. Pozovi kada uništavaš igru.
 
 ## Dev Mode
 
-When developing locally (outside the Kruzic iframe), the SDK automatically switches to dev mode:
+Kada razvijaš lokalno (van Kružić iframe-a), SDK automatski prelazi u dev mode:
 
-- Uses `localStorage` instead of postMessage communication
-- Simulates a signed-in user with ID "dev-user"
-- All methods work normally for testing
+- Koristi `localStorage` umesto postMessage komunikacije
+- Simulira prijavljenog korisnika sa ID-jem "dev-user"
+- Sve metode rade normalno za testiranje
 
-You can also enable dev mode explicitly:
+Možeš i eksplicitno uključiti dev mode:
 
 ```typescript
 const sdk = new KruzicClient({ devMode: true });
@@ -107,24 +109,24 @@ const sdk = new KruzicClient({ devMode: true });
 
 ## Server API
 
-For games with a backend server, use the server SDK to access user data via REST API.
+Za igre sa backend serverom, koristi server SDK za pristup podacima preko REST API-ja.
 
 ```typescript
 import { KruzicServer } from "@kruzic/game-sdk/server";
 
 const sdk = new KruzicServer({
   apiKey: process.env.KRUZIC_API_KEY,
-  gameId: "your-game-id"
+  gameId: "id-tvoje-igre"
 });
 
-// Get user data (userId obtained from client SDK)
+// Dobij podatke korisnika (userId dobijaš iz client SDK-a)
 const data = await sdk.getUserData(userId, "highscore");
 
-// Set user data
+// Sačuvaj podatke korisnika
 await sdk.setUserData(userId, "highscore", 1000);
 ```
 
-## Example: Saving Game Progress
+## Primer: Čuvanje napretka
 
 ```typescript
 import { KruzicClient } from "@kruzic/game-sdk/client";
@@ -137,34 +139,34 @@ interface GameProgress {
   achievements: string[];
 }
 
-async function loadProgress(): Promise<GameProgress> {
-  const saved = await sdk.getData<GameProgress>("progress");
-  return saved ?? { level: 1, coins: 0, achievements: [] };
+async function ucitajNapredak(): Promise<GameProgress> {
+  const sacuvano = await sdk.getData<GameProgress>("progress");
+  return sacuvano ?? { level: 1, coins: 0, achievements: [] };
 }
 
-async function saveProgress(progress: GameProgress) {
-  await sdk.setData("progress", progress);
+async function sacuvajNapredak(napredak: GameProgress) {
+  await sdk.setData("progress", napredak);
 }
 
-// On game start
+// Na početku igre
 sdk.ready();
-const progress = await loadProgress();
+const napredak = await ucitajNapredak();
 
-// After completing a level
-progress.level++;
-progress.coins += 100;
-await saveProgress(progress);
+// Posle završenog nivoa
+napredak.level++;
+napredak.coins += 100;
+await sacuvajNapredak(napredak);
 ```
 
-## Data Storage
+## Čuvanje podataka
 
-- **Signed-in users**: Data is stored on Kruzic servers and synced across devices
-- **Guests**: Data is stored in the browser's localStorage
+- **Prijavljeni korisnici**: Podaci se čuvaju na Kružić serverima i sinhronizuju između uređaja
+- **Gosti**: Podaci se čuvaju u localStorage browsera
 
-## TypeScript Support
+## TypeScript podrška
 
-This package includes TypeScript definitions. All methods are fully typed.
+Ovaj paket uključuje TypeScript definicije. Sve metode su potpuno tipizirane.
 
-## License
+## Licenca
 
 MIT
