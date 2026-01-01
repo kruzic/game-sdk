@@ -1,0 +1,60 @@
+{
+  "name": "@kruzic/game-sdk",
+  "version": "0.1.0",
+  "description": "SDK for building games on the Kruzic platform - handle auth, user data, and more",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client/index.js",
+      "types": "./dist/client/index.d.ts"
+    },
+    "./server": {
+      "import": "./dist/server/index.js",
+      "types": "./dist/server/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "kruzic",
+    "game",
+    "sdk",
+    "iframe",
+    "postmessage",
+    "game-development",
+    "html5-games"
+  ],
+  "author": "Kruzic <hello@kruzic.rs>",
+  "license": "MIT",
+  "homepage": "https://kruzic.rs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kruzic/game-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kruzic/game-sdk/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}
