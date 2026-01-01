@@ -4,6 +4,8 @@
 
 SDK za pravljenje igara na [Kružić](https://kruzic.rs) platformi.
 
+> **Demo projekat:** Pogledaj [sdk-demo](https://github.com/kruzic/sdk-demo) za kompletan primer korišćenja SDK-a.
+
 ## Instalacija
 
 ```bash
