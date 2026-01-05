@@ -17,21 +17,29 @@ export class KruzicClient {
   >();
   private parentOrigin: string;
   private isIframe: boolean;
+  private isWebView: boolean;
+  private isEmbedded: boolean;
   private devMode: boolean;
   private gameId: string;
 
   constructor(options: KruzicClientOptions = {}) {
     this.isIframe = typeof window !== "undefined" && window.parent !== window;
+    this.isWebView = typeof window !== "undefined" && !!(window as unknown as { ReactNativeWebView?: unknown }).ReactNativeWebView;
+    this.isEmbedded = this.isIframe || this.isWebView;
     this.parentOrigin = "*"; // Will be restricted by host
-    this.devMode = options.devMode ?? !this.isIframe;
+    this.devMode = options.devMode ?? !this.isEmbedded;
     this.gameId = options.gameId ?? "dev-game";
 
-    if (this.isIframe) {
+    if (this.isEmbedded) {
       window.addEventListener("message", this.handleMessage.bind(this));
     }
 
-    if (this.devMode && !this.isIframe) {
+    if (this.devMode && !this.isEmbedded) {
       console.log("[Kružić SDK] Running in dev mode - using localStorage");
+    }
+
+    if (this.isWebView) {
+      console.log("[Kružić SDK] Running in React Native WebView");
     }
   }
 
@@ -56,14 +64,24 @@ export class KruzicClient {
     }
   }
 
+  private postToHost(message: SDKMessage): void {
+    if (this.isWebView) {
+      // React Native WebView
+      (window as unknown as { ReactNativeWebView: { postMessage: (msg: string) => void } }).ReactNativeWebView.postMessage(JSON.stringify(message));
+    } else if (this.isIframe) {
+      // Browser iframe
+      window.parent.postMessage(message, this.parentOrigin);
+    }
+  }
+
   private send<T = unknown>(type: MessageType, payload?: unknown): Promise<T> {
-    // In dev mode without iframe, we don't send messages
-    if (!this.isIframe && !this.devMode) {
-      return Promise.reject(new Error("SDK must be used within Kružić iframe"));
+    // In dev mode without embedding, we don't send messages
+    if (!this.isEmbedded && !this.devMode) {
+      return Promise.reject(new Error("SDK must be used within Kružić iframe or WebView"));
     }
 
     // Dev mode - handled locally, no message needed
-    if (this.devMode && !this.isIframe) {
+    if (this.devMode && !this.isEmbedded) {
       return Promise.reject(new Error("Use dev mode methods directly"));
     }
 
@@ -81,7 +99,7 @@ export class KruzicClient {
         payload,
       };
 
-      window.parent.postMessage(message, this.parentOrigin);
+      this.postToHost(message);
 
       // Timeout after 10 seconds
       setTimeout(() => {
@@ -97,7 +115,7 @@ export class KruzicClient {
    * Signal that the game has loaded and is ready
    */
   ready(): void {
-    if (!this.isIframe) {
+    if (!this.isEmbedded) {
       if (this.devMode) {
         console.log("[Kružić SDK] Game ready (dev mode)");
       }
@@ -109,14 +127,14 @@ export class KruzicClient {
       requestId: ++this.requestId,
     };
 
-    window.parent.postMessage(message, this.parentOrigin);
+    this.postToHost(message);
   }
 
   /**
    * Check if the current user is signed in
    */
   async isSignedIn(): Promise<boolean> {
-    if (this.devMode && !this.isIframe) {
+    if (this.devMode && !this.isEmbedded) {
       // In dev mode, always return true for testing
       return true;
     }
@@ -128,7 +146,7 @@ export class KruzicClient {
    * Get the current user's details (if signed in)
    */
   async getUserDetails(): Promise<UserDetails | null> {
-    if (this.devMode && !this.isIframe) {
+    if (this.devMode && !this.isEmbedded) {
       return {
         id: "dev-user",
         name: "Dev User",
@@ -142,7 +160,7 @@ export class KruzicClient {
    * Get the current user's ID (for server-side API calls)
    */
   async getUserId(): Promise<string | null> {
-    if (this.devMode && !this.isIframe) {
+    if (this.devMode && !this.isEmbedded) {
       return "dev-user";
     }
     const result = await this.send<{ userId: string | null }>("GET_USER_ID");
@@ -153,7 +171,7 @@ export class KruzicClient {
    * Get a stored value for the current user
    */
   async getData<T = unknown>(key: string): Promise<T | null> {
-    if (this.devMode && !this.isIframe) {
+    if (this.devMode && !this.isEmbedded) {
       const storageKey = this.getStorageKey(key);
       const value = localStorage.getItem(storageKey);
       if (!value) return null;
@@ -170,7 +188,7 @@ export class KruzicClient {
    * Store a value for the current user
    */
   async setData<T = unknown>(key: string, value: T): Promise<void> {
-    if (this.devMode && !this.isIframe) {
+    if (this.devMode && !this.isEmbedded) {
       const storageKey = this.getStorageKey(key);
       localStorage.setItem(storageKey, JSON.stringify(value));
       return;
@@ -182,7 +200,7 @@ export class KruzicClient {
    * Delete a stored value for the current user
    */
   async deleteData(key: string): Promise<void> {
-    if (this.devMode && !this.isIframe) {
+    if (this.devMode && !this.isEmbedded) {
       const storageKey = this.getStorageKey(key);
       localStorage.removeItem(storageKey);
       return;
@@ -194,7 +212,7 @@ export class KruzicClient {
    * List all stored keys for the current user
    */
   async listData(): Promise<string[]> {
-    if (this.devMode && !this.isIframe) {
+    if (this.devMode && !this.isEmbedded) {
       const prefix = this.getStorageKey("");
       const keys: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
