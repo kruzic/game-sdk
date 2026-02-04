@@ -1,6 +1,21 @@
-import type { SDKMessage, SDKResponse, UserDetails, MessageType } from "./types";
+import type {
+  SDKMessage,
+  SDKResponse,
+  UserDetails,
+  MessageType,
+  SchemaField,
+  LeaderboardResult,
+  UserRankResult,
+} from "./types";
 
-export type { UserDetails } from "./types";
+export type {
+  UserDetails,
+  SchemaField,
+  SchemaFieldType,
+  LeaderboardEntry,
+  LeaderboardResult,
+  UserRankResult,
+} from "./types";
 
 export interface KruzicClientOptions {
   /** Enable dev mode - uses localStorage instead of postMessage when not in iframe */
@@ -224,6 +239,50 @@ export class KruzicClient {
       return keys;
     }
     return this.send<string[]>("LIST_USER_DATA");
+  }
+
+  /**
+   * Get the data schema for this game
+   * Returns null if no schema is defined
+   */
+  async getDataSchema(): Promise<SchemaField[] | null> {
+    if (this.devMode && !this.isEmbedded) {
+      // No schema validation in dev mode
+      return null;
+    }
+    return this.send<SchemaField[] | null>("GET_DATA_SCHEMA");
+  }
+
+  /**
+   * Get leaderboard entries for a field
+   * @param field The field API name
+   * @param options Pagination options
+   */
+  async getLeaderboard(
+    field: string,
+    options?: { limit?: number; offset?: number }
+  ): Promise<LeaderboardResult | null> {
+    if (this.devMode && !this.isEmbedded) {
+      // No leaderboards in dev mode
+      return null;
+    }
+    return this.send<LeaderboardResult | null>("GET_LEADERBOARD", {
+      field,
+      limit: options?.limit,
+      offset: options?.offset,
+    });
+  }
+
+  /**
+   * Get the current user's rank for a leaderboard field
+   * @param field The field API name
+   */
+  async getMyRank(field: string): Promise<UserRankResult | null> {
+    if (this.devMode && !this.isEmbedded) {
+      // No leaderboards in dev mode
+      return null;
+    }
+    return this.send<UserRankResult | null>("GET_MY_RANK", { field });
   }
 
   /**

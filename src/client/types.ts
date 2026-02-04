@@ -26,4 +26,45 @@ export type MessageType =
   | "GET_USER_DATA"
   | "SET_USER_DATA"
   | "LIST_USER_DATA"
-  | "DELETE_USER_DATA";
+  | "DELETE_USER_DATA"
+  | "GET_DATA_SCHEMA"
+  | "GET_LEADERBOARD"
+  | "GET_MY_RANK";
+
+export type SchemaFieldType = "string" | "number" | "json";
+
+export interface SchemaField {
+  apiName: string;
+  type: SchemaFieldType;
+  clientRead: boolean;
+  clientWrite: boolean;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  userId: string;
+  username: string | null;
+  tag: string | null;
+  name: string;
+  image: string | null;
+  value: number;
+  formattedValue: string;
+}
+
+export interface LeaderboardResult {
+  entries: LeaderboardEntry[];
+  total: number;
+  userRank?: { rank: number; value: number; formattedValue: string } | null;
+  fieldInfo: {
+    apiName: string;
+    displayName: string;
+    displayTemplate: string | null;
+    leaderboardSort: "asc" | "desc";
+  };
+}
+
+export interface UserRankResult {
+  rank: number;
+  value: number;
+  formattedValue: string;
+}
