@@ -29,7 +29,8 @@ export type MessageType =
   | "DELETE_USER_DATA"
   | "GET_DATA_SCHEMA"
   | "GET_LEADERBOARD"
-  | "GET_MY_RANK";
+  | "GET_MY_RANK"
+  | "INCREMENT_DATA";
 
 export type SchemaFieldType = "string" | "number" | "json";
 

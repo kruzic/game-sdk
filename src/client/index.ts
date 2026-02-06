@@ -18,9 +18,9 @@ export type {
 } from "./types";
 
 export interface KruzicClientOptions {
-  /** Enable dev mode - uses localStorage instead of postMessage when not in iframe */
+  /** Uključuje dev mode - koristi localStorage umesto postMessage kada nije u iframe-u */
   devMode?: boolean;
-  /** Game ID for localStorage keys in dev mode */
+  /** ID igre za localStorage ključeve u dev mode-u */
   gameId?: string;
 }
 
@@ -41,7 +41,7 @@ export class KruzicClient {
     this.isIframe = typeof window !== "undefined" && window.parent !== window;
     this.isWebView = typeof window !== "undefined" && !!(window as unknown as { ReactNativeWebView?: unknown }).ReactNativeWebView;
     this.isEmbedded = this.isIframe || this.isWebView;
-    this.parentOrigin = "*"; // Will be restricted by host
+    this.parentOrigin = "*"; // Host će ograničiti origin
     this.devMode = options.devMode ?? !this.isEmbedded;
     this.gameId = options.gameId ?? "dev-game";
 
@@ -90,12 +90,12 @@ export class KruzicClient {
   }
 
   private send<T = unknown>(type: MessageType, payload?: unknown): Promise<T> {
-    // In dev mode without embedding, we don't send messages
+    // Bez embedding-a i dev mode-a, ne šaljemo poruke
     if (!this.isEmbedded && !this.devMode) {
       return Promise.reject(new Error("SDK must be used within Kružić iframe or WebView"));
     }
 
-    // Dev mode - handled locally, no message needed
+    // Dev mode - obrađuje se lokalno, poruka nije potrebna
     if (this.devMode && !this.isEmbedded) {
       return Promise.reject(new Error("Use dev mode methods directly"));
     }
@@ -116,7 +116,7 @@ export class KruzicClient {
 
       this.postToHost(message);
 
-      // Timeout after 10 seconds
+      // Timeout nakon 10 sekundi
       setTimeout(() => {
         if (this.pendingRequests.has(id)) {
           this.pendingRequests.delete(id);
@@ -127,7 +127,7 @@ export class KruzicClient {
   }
 
   /**
-   * Signal that the game has loaded and is ready
+   * Obaveštava platformu da je igra učitana i spremna.
    */
   ready(): void {
     if (!this.isEmbedded) {
@@ -146,11 +146,11 @@ export class KruzicClient {
   }
 
   /**
-   * Check if the current user is signed in
+   * Proverava da li je korisnik prijavljen.
    */
   async isSignedIn(): Promise<boolean> {
     if (this.devMode && !this.isEmbedded) {
-      // In dev mode, always return true for testing
+      // U dev mode-u uvek vraća true za testiranje
       return true;
     }
     const result = await this.send<{ signedIn: boolean }>("IS_USER_SIGNED_IN");
@@ -158,7 +158,7 @@ export class KruzicClient {
   }
 
   /**
-   * Get the current user's details (if signed in)
+   * Vraća detalje o trenutnom korisniku (ako je prijavljen).
    */
   async getUserDetails(): Promise<UserDetails | null> {
     if (this.devMode && !this.isEmbedded) {
@@ -172,7 +172,7 @@ export class KruzicClient {
   }
 
   /**
-   * Get the current user's ID (for server-side API calls)
+   * Vraća ID trenutnog korisnika (za server-side API pozive).
    */
   async getUserId(): Promise<string | null> {
     if (this.devMode && !this.isEmbedded) {
@@ -183,7 +183,7 @@ export class KruzicClient {
   }
 
   /**
-   * Get a stored value for the current user
+   * Vraća sačuvanu vrednost za trenutnog korisnika.
    */
   async getData<T = unknown>(key: string): Promise<T | null> {
     if (this.devMode && !this.isEmbedded) {
@@ -200,7 +200,7 @@ export class KruzicClient {
   }
 
   /**
-   * Store a value for the current user
+   * Čuva vrednost za trenutnog korisnika.
    */
   async setData<T = unknown>(key: string, value: T): Promise<void> {
     if (this.devMode && !this.isEmbedded) {
@@ -212,7 +212,7 @@ export class KruzicClient {
   }
 
   /**
-   * Delete a stored value for the current user
+   * Briše sačuvanu vrednost za trenutnog korisnika.
    */
   async deleteData(key: string): Promise<void> {
     if (this.devMode && !this.isEmbedded) {
@@ -224,7 +224,7 @@ export class KruzicClient {
   }
 
   /**
-   * List all stored keys for the current user
+   * Vraća listu svih sačuvanih ključeva za trenutnog korisnika.
    */
   async listData(): Promise<string[]> {
     if (this.devMode && !this.isEmbedded) {
@@ -242,28 +242,28 @@ export class KruzicClient {
   }
 
   /**
-   * Get the data schema for this game
-   * Returns null if no schema is defined
+   * Vraća data schema za ovu igru.
+   * Vraća null ako schema nije definisana.
    */
   async getDataSchema(): Promise<SchemaField[] | null> {
     if (this.devMode && !this.isEmbedded) {
-      // No schema validation in dev mode
+      // Nema schema validacije u dev mode-u
       return null;
     }
     return this.send<SchemaField[] | null>("GET_DATA_SCHEMA");
   }
 
   /**
-   * Get leaderboard entries for a field
-   * @param field The field API name
-   * @param options Pagination options
+   * Vraća leaderboard unose za dato polje.
+   * @param field API naziv polja
+   * @param options Opcije za paginaciju
    */
   async getLeaderboard(
     field: string,
     options?: { limit?: number; offset?: number }
   ): Promise<LeaderboardResult | null> {
     if (this.devMode && !this.isEmbedded) {
-      // No leaderboards in dev mode
+      // Nema leaderboard-a u dev mode-u
       return null;
     }
     return this.send<LeaderboardResult | null>("GET_LEADERBOARD", {
@@ -274,19 +274,36 @@ export class KruzicClient {
   }
 
   /**
-   * Get the current user's rank for a leaderboard field
-   * @param field The field API name
+   * Vraća rang trenutnog korisnika za dato leaderboard polje.
+   * @param field API naziv polja
    */
   async getMyRank(field: string): Promise<UserRankResult | null> {
     if (this.devMode && !this.isEmbedded) {
-      // No leaderboards in dev mode
+      // Nema leaderboard-a u dev mode-u
       return null;
     }
     return this.send<UserRankResult | null>("GET_MY_RANK", { field });
   }
 
   /**
-   * Cleanup event listeners
+   * Atomski inkrementira numeričku vrednost za trenutnog korisnika.
+   * @param key Ključ podatka za increment
+   * @param delta Vrednost za dodavanje (može biti negativna)
+   */
+  async increment(key: string, delta: number = 1): Promise<void> {
+    if (this.devMode && !this.isEmbedded) {
+      const storageKey = this.getStorageKey(key);
+      const current = localStorage.getItem(storageKey);
+      const currentValue = current ? JSON.parse(current) : 0;
+      const newValue = (typeof currentValue === "number" ? currentValue : 0) + delta;
+      localStorage.setItem(storageKey, JSON.stringify(newValue));
+      return;
+    }
+    await this.send("INCREMENT_DATA", { key, delta });
+  }
+
+  /**
+   * Čisti event listener-e.
    */
   destroy(): void {
     window.removeEventListener("message", this.handleMessage.bind(this));
