@@ -1,6 +1,6 @@
 {
   "name": "@kruzic/game-sdk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "SDK for building games on the Kruzic platform - handle auth, user data, and more",
   "type": "module",
   "main": "./dist/index.js",
