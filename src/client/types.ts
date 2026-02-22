@@ -14,7 +14,7 @@ export interface SDKResponse {
 
 export interface UserDetails {
   id: string;
-  name: string;
+  name: string | null;
   image: string | null;
 }
 
@@ -43,7 +43,7 @@ export interface SchemaField {
 
 export interface LeaderboardEntry {
   rank: number;
-  userId: string;
+  publicId: number;
   username: string | null;
   tag: string | null;
   name: string;
